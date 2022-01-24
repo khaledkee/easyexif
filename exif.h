@@ -73,13 +73,15 @@ class EXIFInfo {
   std::string ImageDescription;     // Image description
   std::string Make;                 // Camera manufacturer's name
   std::string Model;                // Camera model
-  unsigned short Orientation;       // Image orientation, start of data corresponds to
-                                    // 0: unspecified in EXIF data
-                                    // 1: upper left of image
-                                    // 3: lower right of image
-                                    // 6: upper right of image
-                                    // 8: lower left of image
-                                    // 9: undefined
+  unsigned short Orientation;       // Image orientation
+                                    // 1: Horizontal (normal)
+                                    // 2: Mirror horizontal
+                                    // 3: Rotate 180
+                                    // 4: Mirror vertical
+                                    // 5: Mirror horizontal and rotate 270 CW
+                                    // 6: Rotate 90 CW
+                                    // 7: Mirror horizontal and rotate 90 CW
+                                    // 8: Rotate 270 CW
   unsigned short BitsPerSample;     // Number of bits per component
   double XResolution;               // Num pixels per <ResolutionUnit> - 72dpi by default
   double YResolution;               // Num pixels per <ResolutionUnit> - 72dpi by default

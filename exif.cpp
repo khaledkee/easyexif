@@ -973,7 +973,7 @@ void easyexif::EXIFInfo::clear() {
 
   // Shorts / unsigned / double
   ByteAlign = 0;
-  Orientation = 1;
+  Orientation = std::numeric_limits<unsigned short>::max();
 
   BitsPerSample = 8;
   XResolution = 72.0;

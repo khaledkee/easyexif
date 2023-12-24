@@ -4,7 +4,7 @@ A tiny ISO-compliant C++ EXIF parsing library.
 
 EasyEXIF is a tiny, lightweight C++ library that parses basic information out of JPEG files. It uses only the std::string library and is otherwise pure C++. You pass it the binary contents of a JPEG file, and it parses several of the most important EXIF fields for you.
 
-Why use this library? __Include one .h file, compile one .cc file, and that's it.__
+Why use this library? **Include one .h file, compile one .cpp file, and that's it.**
 
 Sometimes you just need to quickly extract basic information from a JPEG file's EXIF headers: the time the image was taken (not the file timestamp, the camera's internal time), the F-stop or exposure time, GPS information embedded in the EXIF file, what the camera make and model was, etc.. Unfortunately, all the EXIF libraries out there are not very lightweight or easy to integrate into larger programs. EasyEXIF aims to solve that problem, and is released under a very liberal BSD License for use practically anywhere.
 
@@ -14,16 +14,27 @@ Here is an up-to-date list of [valid EXIF tags](https://exiftool.org/TagNames/EX
 
 ## Fork
 
-[asmaloney](https://github.com/asmaloney) forked this library [from here](https://github.com/mayanklahiri/easyexif) since it seemed to no longer be maintained. I fixed a couple of bugs, added several fields, and added a way to determine if a field was set in the image's EXIF data or not.
+[asmaloney](https://github.com/asmaloney) forked this library [from here](https://github.com/mayanklahiri/easyexif) since it seemed to no longer be maintained. I have made the following changes:
+
+- fixed a couple of bugs
+- fixed several static analysis findings
+- added several fields
+- set defaults according to the standard
+- added a way to determine if a field was set in the image's EXIF data or not
+- added a CMake file
+- added a clang-format file
+- added CI for macOS, Linux, and Windows
+- added CI for clang-format
+- now requires C++17
 
 ## Features:
 
-  1. Supports common EXIF fields including GPS, ISO speed, etc.
-  2. Extensively documented in the source.
-  3. Valgrind tested for memory leaks.
-  4. Handles corrupt JPEGs.
-  5. Compiles without complaints using `-Wall -Wextra -Werror -pedantic -ansi` on gcc v4.8.2
-  6. No uses of new/malloc.
+1. Supports common EXIF fields including GPS, ISO speed, etc.
+2. Extensively documented in the source.
+3. Valgrind tested for memory leaks.
+4. Handles corrupt JPEGs.
+5. Compiles without complaints using `-Wall -Wextra -Werror -pedantic -ansi` on gcc v4.8.2
+6. No uses of new/malloc.
 
 ## License
 
@@ -33,11 +44,11 @@ BSD. Free for personal and commercial use.
 
 Reasonable pull requests are gladly accepted. Please ensure that you have run the following steps before submitting a patch:
 
-  1. `clang-format` the source files, using the default style (Google).
-  2. Run `test.sh` to make sure test images are being parsed correctly.
-  3. Compile and run `demo` using `valgrind --leak-check=full` to ensure that there are no memory leaks.
-  4. Add yourself to the contributors list in `CONTRIBUTORS`.
-  5. For misbehaving images, please try to include a test image that misbehaves in the `test-images` folder.
+1. `clang-format` the source files, using the default style (Google).
+2. Run `test.sh` to make sure test images are being parsed correctly.
+3. Compile and run `demo` using `valgrind --leak-check=full` to ensure that there are no memory leaks.
+4. Add yourself to the contributors list in `CONTRIBUTORS`.
+5. For misbehaving images, please try to include a test image that misbehaves in the `test-images` folder.
 
 ## Example:
 

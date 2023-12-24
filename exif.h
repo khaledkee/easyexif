@@ -35,6 +35,7 @@
 */
 
 #include <cmath>
+#include <limits>
 #include <string>
 
 namespace easyexif {

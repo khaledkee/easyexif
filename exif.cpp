@@ -566,7 +566,7 @@ easyexif::ParseError easyexif::EXIFInfo::parseFromEXIFSegment(
   // entries in the section. The last 4 bytes of the IFD contain an offset
   // to the next IFD, which means this IFD must contain exactly 6 + 12 * num
   // bytes of data.
-  auto [errIF, exif_sub_ifd_offset, gps_sub_ifd_offset] =
+  auto [errIF, exif_sub_ifd_offset] =
       parseIFEntries(buf, len, offs);
 
   if (errIF != ParseError::None) {
@@ -582,16 +582,6 @@ easyexif::ParseError easyexif::EXIFInfo::parseFromEXIFSegment(
 
     if (errEXIF != ParseError::None) {
       return errEXIF;
-    }
-  }
-
-  // Jump to the GPS SubIFD if it exists and parse all the information
-  // there. Note that it's possible that the GPS SubIFD doesn't exist.
-  if (gps_sub_ifd_offset + 4 <= len) {
-    ParseError errGPS = parseGPSSubIFD(buf, len, gps_sub_ifd_offset);
-
-    if (errGPS != ParseError::None) {
-      return errGPS;
     }
   }
 
@@ -636,25 +626,24 @@ easyexif::ParseError easyexif::EXIFInfo::parseTIFFHeader(
   return ParseError::None;
 }
 
-// Parse Image File (IF) entries and return {error, EXIF offset, GPS offset}
-std::tuple<easyexif::ParseError, unsigned int, unsigned int>
+// Parse Image File (IF) entries and return {error, EXIF offset}
+std::tuple<easyexif::ParseError, unsigned int>
 easyexif::EXIFInfo::parseIFEntries(const unsigned char *buf, unsigned int len,
                                    unsigned int startingOffset) {
   unsigned int offs = startingOffset;
 
   if (offs + 2 > len) {
-    return {ParseError::IFEntryCorrupt, 0, 0};
+    return {ParseError::IFEntryCorrupt, 0};
   }
 
   int num_entries = parse_value<uint16_t>(buf + offs, ByteAlign);
   if (offs + 6 + 12 * num_entries > len) {
-    return {ParseError::IFEntryCorrupt, 0, 0};
+    return {ParseError::IFEntryCorrupt, 0};
   }
 
   offs += 2;
 
   unsigned exif_sub_ifd_offset = len;
-  unsigned gps_sub_ifd_offset = len;
   while (--num_entries >= 0) {
     IFEntry result = parseIFEntry(buf, offs, ByteAlign, TIFFHeaderStart, len);
     offs += 12;
@@ -741,7 +730,6 @@ easyexif::EXIFInfo::parseIFEntries(const unsigned char *buf, unsigned int len,
 
       case 0x8825:
         // GPS IFS offset
-        gps_sub_ifd_offset = TIFFHeaderStart + result.data();
         break;
 
       case 0x8769:
@@ -751,7 +739,7 @@ easyexif::EXIFInfo::parseIFEntries(const unsigned char *buf, unsigned int len,
     }
   }
 
-  return {ParseError::None, exif_sub_ifd_offset, gps_sub_ifd_offset};
+  return {ParseError::None, exif_sub_ifd_offset};
 }
 
 // Parse EXIF SubIFD and return any error.
@@ -971,162 +959,6 @@ easyexif::ParseError easyexif::EXIFInfo::parseEXIFSubIFD(
   return ParseError::None;
 }
 
-// Parse GPS SubIFD and return any error.
-easyexif::ParseError easyexif::EXIFInfo::parseGPSSubIFD(
-    const unsigned char *buf, unsigned int len, unsigned int startingOffset) {
-  unsigned int offs = startingOffset;
-
-  int num_sub_entries = parse_value<uint16_t>(buf + offs, ByteAlign);
-  if (offs + 6 + 12 * num_sub_entries > len) {
-    return ParseError::GPSDataCorrupt;
-  }
-
-  offs += 2;
-
-  while (--num_sub_entries >= 0) {
-    unsigned short tag = 0;
-    unsigned short format = 0;
-    unsigned int length = 0;
-    unsigned int data = 0;
-
-    parseIFEntryHeader(buf + offs, ByteAlign, tag, format, length, data);
-
-    switch (tag) {
-      case 1:
-        // GPS north or south
-        if (offs + 8 > len) {
-          return ParseError::GPSDataCorrupt;
-        }
-
-        GeoLocation.LatComponents.direction = *(buf + offs + 8);
-
-        if (GeoLocation.LatComponents.direction == 0) {
-          GeoLocation.LatComponents.direction = '?';
-        }
-
-        if ('S' == GeoLocation.LatComponents.direction) {
-          GeoLocation.Latitude = -GeoLocation.Latitude;
-        }
-        break;
-
-      case 2:
-        // GPS latitude
-        if ((format == UnsignedRational || format == SignedRational) &&
-            length == 3) {
-          if (data + TIFFHeaderStart + 16 > len) {
-            return ParseError::GPSDataCorrupt;
-          }
-
-          GeoLocation.LatComponents.degrees =
-              parse_value<Rational>(buf + data + TIFFHeaderStart, ByteAlign);
-
-          GeoLocation.LatComponents.minutes = parse_value<Rational>(
-              buf + data + TIFFHeaderStart + 8, ByteAlign);
-
-          GeoLocation.LatComponents.seconds = parse_value<Rational>(
-              buf + data + TIFFHeaderStart + 16, ByteAlign);
-
-          GeoLocation.Latitude = GeoLocation.LatComponents.degrees +
-                                 GeoLocation.LatComponents.minutes / 60 +
-                                 GeoLocation.LatComponents.seconds / 3600;
-
-          if ('S' == GeoLocation.LatComponents.direction) {
-            GeoLocation.Latitude = -GeoLocation.Latitude;
-          }
-        }
-        break;
-
-      case 3:
-        // GPS east or west
-        if (offs + 8 > len) {
-          return ParseError::GPSDataCorrupt;
-        }
-
-        GeoLocation.LonComponents.direction = *(buf + offs + 8);
-
-        if (GeoLocation.LonComponents.direction == 0) {
-          GeoLocation.LonComponents.direction = '?';
-        }
-
-        if ('W' == GeoLocation.LonComponents.direction) {
-          GeoLocation.Longitude = -GeoLocation.Longitude;
-        }
-        break;
-
-      case 4:
-        // GPS longitude
-        if ((format == UnsignedRational || format == SignedRational) &&
-            length == 3) {
-          if (data + TIFFHeaderStart + 16 > len) {
-            return ParseError::GPSDataCorrupt;
-          }
-
-          GeoLocation.LonComponents.degrees =
-              parse_value<Rational>(buf + data + TIFFHeaderStart, ByteAlign);
-
-          GeoLocation.LonComponents.minutes = parse_value<Rational>(
-              buf + data + TIFFHeaderStart + 8, ByteAlign);
-
-          GeoLocation.LonComponents.seconds = parse_value<Rational>(
-              buf + data + TIFFHeaderStart + 16, ByteAlign);
-
-          GeoLocation.Longitude = GeoLocation.LonComponents.degrees +
-                                  GeoLocation.LonComponents.minutes / 60 +
-                                  GeoLocation.LonComponents.seconds / 3600;
-
-          if ('W' == GeoLocation.LonComponents.direction)
-            GeoLocation.Longitude = -GeoLocation.Longitude;
-        }
-        break;
-
-      case 5:
-        // GPS altitude reference (below or above sea level)
-        if (offs + 8 > len) {
-          return ParseError::GPSDataCorrupt;
-        }
-
-        GeoLocation.AltitudeRef = *(buf + offs + 8);
-
-        if (1 == GeoLocation.AltitudeRef) {
-          GeoLocation.Altitude = -GeoLocation.Altitude;
-        }
-        break;
-
-      case 6:
-        // GPS altitude
-        if (format == UnsignedRational || format == SignedRational) {
-          if (data + TIFFHeaderStart > len) {
-            return ParseError::GPSDataCorrupt;
-          }
-
-          GeoLocation.Altitude =
-              parse_value<Rational>(buf + data + TIFFHeaderStart, ByteAlign);
-
-          if (1 == GeoLocation.AltitudeRef) {
-            GeoLocation.Altitude = -GeoLocation.Altitude;
-          }
-        }
-        break;
-
-      case 11:
-        // GPS degree of precision (DOP)
-        if (format == UnsignedRational || format == SignedRational) {
-          if (data + TIFFHeaderStart > len) {
-            return ParseError::GPSDataCorrupt;
-          }
-
-          GeoLocation.DOP =
-              parse_value<Rational>(buf + data + TIFFHeaderStart, ByteAlign);
-        }
-        break;
-    }
-
-    offs += 12;
-  }
-
-  return ParseError::None;
-}
-
 void easyexif::EXIFInfo::clear() {
   // Strings
   ImageDescription = "";
@@ -1166,21 +998,6 @@ void easyexif::EXIFInfo::clear() {
   ColorSpace = std::numeric_limits<unsigned short>::max();
   ImageWidth = std::numeric_limits<unsigned int>::max();
   ImageHeight = std::numeric_limits<unsigned int>::max();
-
-  // Geolocation
-  GeoLocation.Latitude = std::numeric_limits<double>::max();
-  GeoLocation.Longitude = std::numeric_limits<double>::max();
-  GeoLocation.Altitude = std::numeric_limits<double>::max();
-  GeoLocation.AltitudeRef = 0;
-  GeoLocation.DOP = std::numeric_limits<double>::max();
-  GeoLocation.LatComponents.degrees = std::numeric_limits<double>::max();
-  GeoLocation.LatComponents.minutes = std::numeric_limits<double>::max();
-  GeoLocation.LatComponents.seconds = std::numeric_limits<double>::max();
-  GeoLocation.LatComponents.direction = '?';
-  GeoLocation.LonComponents.degrees = std::numeric_limits<double>::max();
-  GeoLocation.LonComponents.minutes = std::numeric_limits<double>::max();
-  GeoLocation.LonComponents.seconds = std::numeric_limits<double>::max();
-  GeoLocation.LonComponents.direction = '?';
 
   // LensInfo
   LensInfo.FocalLengthMax = std::numeric_limits<double>::max();

@@ -49,7 +49,6 @@ enum ParseError : int {
   EXIFDataCorrupt,    // EXIF data was found, but data was corrupt.
   TIFFHeaderCorrupt,  // TIFF header was found, but data was corrupt.
   IFEntryCorrupt,     // IF entry was found, but data was corrupt.
-  GPSDataCorrupt      // GPS data was found, but data was corrupt.
 };
 
 //
@@ -164,20 +163,6 @@ class EXIFInfo {
                                       // 0xffff = Uncalibrated
   unsigned ImageWidth;                // Image width reported in EXIF data
   unsigned ImageHeight;               // Image height reported in EXIF data
-  struct Geolocation_t {              // GPS information embedded in file
-    double Latitude;                  // Image latitude expressed as decimal
-    double Longitude;                 // Image longitude expressed as decimal
-    double Altitude;   // Altitude in meters, relative to sea level
-    char AltitudeRef;  // 0 = above sea level, -1 = below sea level
-    double DOP;        // GPS degree of precision (DOP)
-    struct Coord_t {
-      double degrees;
-      double minutes;
-      double seconds;
-      char direction;
-    } LatComponents,
-        LonComponents;  // Latitude, Longitude expressed in deg/min/sec
-  } GeoLocation;
   struct LensInfo_t {              // Lens information
     double FStopMin;               // Min aperture (f-stop)
     double FStopMax;               // Max aperture (f-stop)
@@ -202,14 +187,11 @@ class EXIFInfo {
   ParseError parseTIFFHeader(const unsigned char *buf, unsigned int len,
                              unsigned int &offset);
 
-  std::tuple<ParseError, unsigned int, unsigned int> parseIFEntries(
+  std::tuple<ParseError, unsigned int> parseIFEntries(
       const unsigned char *buf, unsigned int len, unsigned int startingOffset);
 
   ParseError parseEXIFSubIFD(const unsigned char *buf, unsigned int len,
                              unsigned int startingOffset);
-
-  ParseError parseGPSSubIFD(const unsigned char *buf, unsigned int len,
-                            unsigned int startingOffset);
 
   // keeps track of where our TIFF header starts
   unsigned int TIFFHeaderStart = 0;

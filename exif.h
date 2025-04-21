@@ -38,6 +38,8 @@
 #include <string>
 #include <tuple>
 
+#include "export.h"
+
 namespace easyexif {
 
 enum ParseError : int {
@@ -54,7 +56,7 @@ enum ParseError : int {
 //
 // Class responsible for storing and parsing EXIF information from a JPEG blob
 //
-class EXIFInfo {
+class EASYEXIF_EXPORT EXIFInfo {
  public:
   // Parsing function for an entire JPEG image buffer.
   //

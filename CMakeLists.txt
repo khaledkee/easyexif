@@ -15,7 +15,7 @@ if ( EXISTS "${LOC_PATH}" )
     message( FATAL_ERROR "You cannot build in the source directory. Please use a build subdirectory." )
 endif()
 
-add_library( easyexif )
+add_library( easyexif SHARED )
 
 target_compile_features( easyexif
     PRIVATE
@@ -26,6 +26,7 @@ target_sources( easyexif
     PRIVATE
         exif.cpp
         exif.h
+        export.h
 )
 
 add_executable( easyexif_demo EXCLUDE_FROM_ALL )

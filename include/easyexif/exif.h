@@ -38,7 +38,7 @@
 #include <string>
 #include <tuple>
 
-#include "export.h"
+#include "exports.h"
 
 namespace easyexif {
 

@@ -7,11 +7,11 @@
 #  define EASYEXIF_NO_EXPORT
 #else
 #  ifndef EASYEXIF_EXPORT
-#    ifdef EASYEXIF_EXPORTS
-/* We are building this library */
+#    ifdef easyexif_EXPORTS
+        /* We are building this library */
 #      define EASYEXIF_EXPORT __declspec(dllexport)
 #    else
-/* We are using this library */
+        /* We are using this library */
 #      define EASYEXIF_EXPORT __declspec(dllimport)
 #    endif
 #  endif

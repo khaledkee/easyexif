@@ -1,33 +1,33 @@
 # Copyright © 2020 Andy Maloney <asmaloney@gmail.com>
 # SPDX-License-Identifier: BSD-3-Clause
 
-cmake_minimum_required( VERSION 3.20 )
+cmake_minimum_required( VERSION 3.16 )
 
 project( easyexif
     LANGUAGES
         CXX
 )
 
-# Require out-of-source builds
-file( TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH )
-
-if ( EXISTS "${LOC_PATH}" )
-    message( FATAL_ERROR "You cannot build in the source directory. Please use a build subdirectory." )
-endif()
-
-add_library( easyexif SHARED )
-
-target_compile_features( easyexif
-    PRIVATE
-        cxx_std_17
+add_library( easyexif SHARED
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/easyexif/exif.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/easyexif/exports.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/easyexif/exif.cpp
 )
 
-target_sources( easyexif
-    PRIVATE
-        exif.cpp
-        exif.h
-        export.h
-)
+# generate exports header file
+include(GenerateExportHeader)
+generate_export_header(easyexif EXPORT_FILE_NAME  ${CMAKE_CURRENT_SOURCE_DIR}/include/easyexif/exports.h)
+
+target_include_directories( easyexif PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories( easyexif PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+set_target_properties( easyexif PROPERTIES FOLDER "")
+
+target_compile_features( easyexif PUBLIC cxx_std_17)
+set_target_properties( easyexif PROPERTIES CXX_EXTENSIONS OFF )
+
+install(TARGETS easyexif LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 add_executable( easyexif_demo EXCLUDE_FROM_ALL )
 

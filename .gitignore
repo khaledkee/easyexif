@@ -27,3 +27,5 @@ demo
 
 # Other
 *.user
+.idea
+cmake-build-*

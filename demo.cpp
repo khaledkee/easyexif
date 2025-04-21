@@ -161,32 +161,6 @@ int main(int argc, char *argv[]) {
     printf("35mm focal length    : %u mm\n", result.FocalLengthIn35mm);
   }
 
-  if (result.isValid(result.GeoLocation.Latitude)) {
-    printf("GPS Latitude         : %f deg (%f deg, %f min, %f sec %c)\n",
-           result.GeoLocation.Latitude,
-           result.GeoLocation.LatComponents.degrees,
-           result.GeoLocation.LatComponents.minutes,
-           result.GeoLocation.LatComponents.seconds,
-           result.GeoLocation.LatComponents.direction);
-  }
-
-  if (result.isValid(result.GeoLocation.Longitude)) {
-    printf("GPS Longitude        : %f deg (%f deg, %f min, %f sec %c)\n",
-           result.GeoLocation.Longitude,
-           result.GeoLocation.LonComponents.degrees,
-           result.GeoLocation.LonComponents.minutes,
-           result.GeoLocation.LonComponents.seconds,
-           result.GeoLocation.LonComponents.direction);
-  }
-
-  if (result.isValid(result.GeoLocation.Altitude)) {
-    printf("GPS Altitude         : %f m\n", result.GeoLocation.Altitude);
-  }
-
-  if (result.isValid(result.GeoLocation.DOP)) {
-    printf("GPS Precision (DOP)  : %f\n", result.GeoLocation.DOP);
-  }
-
   if (result.isValid(result.LensInfo.FocalLengthMin)) {
     printf("Lens min focal length: %f mm\n", result.LensInfo.FocalLengthMin);
   }
